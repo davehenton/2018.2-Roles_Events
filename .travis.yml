@@ -1,3 +1,7 @@
+env:
+  global:
+    - CC_TEST_REPORTER_ID=023abfbf4ae749013ab7141e0eac40b50cf7714410a9c8ffdf73145a9a571a14
+
 sudo: required
 
 language: python
@@ -11,6 +15,11 @@ services:
 before_install:
 -  docker-compose build
 
+before_script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
+
 script:
   - docker-compose up -d
   - docker-compose run web ./event_microservice/manage.py makemigrations
@@ -20,3 +29,4 @@ script:
 
 after_success:
   - docker-compose run -e TRAVIS_PULL_REQUEST=$TRAVIS_PULL_REQUEST -e TRAVIS="$TRAVIS" -e TRAVIS_JOB_ID="$TRAVIS_JOB_ID" -e TRAVIS_BRANCH="$TRAVIS_BRANCH" web bash -c "cd event_microservice/ && coveralls"
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
